@@ -1,4 +1,4 @@
-running = True
+ Running = True
 
 while running:
     firstdig = int(input())

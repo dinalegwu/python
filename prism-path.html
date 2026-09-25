@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Prism Path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0e17;
+    --panel: #10162a;
+    --panel-2: #141b34;
+    --border: #232b4a;
+    --text: #e7ecf5;
+    --muted: #8892b0;
+    --red: #ff5c7a;
+    --green: #45f0ac;
+    --blue: #49c6ff;
+    --gold: #ffd166;
+    --glow-red: rgba(255,92,122,0.55);
+    --glow-green: rgba(69,240,172,0.55);
+    --glow-blue: rgba(73,198,255,0.55);
+    --glow-gold: rgba(255,209,102,0.55);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, #131c3a 0%, transparent 60%),
+      radial-gradient(900px 600px at 110% 10%, #1a1035 0%, transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Sora', system-ui, sans-serif;
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 16px 60px;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:4px;
+  }
+  .brand h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:28px;
+    letter-spacing:0.5px;
+    margin:0;
+    background:linear-gradient(90deg, var(--blue), var(--green) 45%, var(--gold) 75%, var(--red));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .brand span{
+    font-size:12px;
+    color:var(--muted);
+    letter-spacing:0.06em;
+  }
+  .tagline{
+    color:var(--muted);
+    font-size:13.5px;
+    margin-bottom:22px;
+    text-align:center;
+    max-width:420px;
+    line-height:1.5;
+  }
+
+  .layout{
+    display:flex;
+    gap:22px;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    justify-content:center;
+    width:100%;
+    max-width:920px;
+  }
+
+  .board-wrap{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.03);
+    position:relative;
+  }
+
+  .board-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+    gap:10px;
+  }
+  .level-name{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:16px;
+  }
+  .level-sub{
+    color:var(--muted);
+    font-size:12px;
+    margin-top:2px;
+  }
+  .icon-btn{
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--border);
+    color:var(--text);
+    width:34px;height:34px;
+    border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:15px;
+    transition:background .15s, transform .1s;
+  }
+  .icon-btn:hover{ background:rgba(255,255,255,0.09); }
+  .icon-btn:active{ transform:scale(0.94); }
+
+  .board-outer{
+    position:relative;
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .board{
+    display:grid;
+    background:#080b14;
+    border:1px solid var(--border);
+    border-radius:12px;
+    position:relative;
+  }
+  .cell{
+    position:relative;
+    border:1px solid rgba(255,255,255,0.035);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:default;
+  }
+  .cell.placeable{ cursor:pointer; }
+  .cell.placeable:hover{ background:rgba(255,255,255,0.035); }
+  .cell.placeable.glow-hint{
+    animation: pulseHint 1.6s ease-in-out infinite;
+  }
+  @keyframes pulseHint{
+    0%,100%{ background:rgba(255,255,255,0.02); }
+    50%{ background:rgba(255,255,255,0.08); }
+  }
+
+  svg.beams{
+    position:absolute;
+    top:0; left:0;
+    pointer-events:none;
+  }
+  .beam-line{
+    stroke-linecap:round;
+    fill:none;
+  }
+
+  .mirror{
+    width:64%; height:64%;
+    position:relative;
+  }
+  .mirror svg{ width:100%; height:100%; display:block; }
+
+  .source-mark, .target-mark{
+    width:60%; height:60%;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .source-mark{
+    background: radial-gradient(circle at 35% 30%, #fff, var(--c1) 55%, transparent 75%);
+    box-shadow: 0 0 14px var(--glow), 0 0 28px var(--glow);
+  }
+  .target-mark{
+    border:2.5px solid var(--c1);
+    box-shadow: 0 0 10px var(--glow) inset, 0 0 10px var(--glow);
+    background: rgba(255,255,255,0.02);
+  }
+  .target-mark.hit{
+    background: var(--c1);
+    box-shadow: 0 0 18px var(--glow), 0 0 30px var(--glow);
+  }
+  .blocker{
+    width:56%; height:56%;
+    border-radius:6px;
+    background: repeating-linear-gradient(135deg, #2a2f45, #2a2f45 4px, #1b2036 4px, #1b2036 8px);
+    border:1px solid #3a4066;
+  }
+  .splitter{
+    width:60%; height:60%;
+    border-radius:50%;
+    background:radial-gradient(circle at 40% 35%, #fff, #cfd6ff 40%, #7d8cff 75%);
+    box-shadow:0 0 12px rgba(125,140,255,0.7);
+  }
+  .arrow{
+    position:absolute;
+    font-size:11px;
+    color:var(--muted);
+  }
+
+  .controls{
+    margin-top:16px;
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .btn{
+    font-family:'Sora', sans-serif;
+    font-size:13px;
+    padding:9px 16px;
+    border-radius:9px;
+    border:1px solid var(--border);
+    background:rgba(255,255,255,0.03);
+    color:var(--text);
+    cursor:pointer;
+    transition: background .15s, transform .1s;
+  }
+  .btn:hover{ background:rgba(255,255,255,0.08); }
+  .btn:active{ transform:scale(0.96); }
+  .btn.primary{
+    background:linear-gradient(90deg, #2c6fff, #7b4dff);
+    border:none;
+    font-weight:600;
+  }
+  .btn.primary:hover{ filter:brightness(1.08); }
+  .btn:disabled{ opacity:0.35; cursor:not-allowed; }
+
+  .status-row{
+    margin-top:12px;
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .status-row b{ color:var(--text); }
+
+  /* side panel */
+  .side{
+    width:250px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .panel-card{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:16px;
+  }
+  .panel-card h3{
+    margin:0 0 10px;
+    font-family:'Space Grotesk', sans-serif;
+    font-size:13px;
+    letter-spacing:0.03em;
+    color:var(--muted);
+  }
+  .level-list{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .level-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:9px 11px;
+    border-radius:9px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid transparent;
+    cursor:pointer;
+    font-size:13px;
+    transition:background .15s, border-color .15s;
+  }
+  .level-item:hover{ background:rgba(255,255,255,0.06); }
+  .level-item.active{
+    border-color:#3a5bff;
+    background:rgba(58,91,255,0.12);
+  }
+  .level-item .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:#3a4066;
+  }
+  .level-item.solved .dot{
+    background: linear-gradient(90deg, var(--green), var(--blue));
+    box-shadow:0 0 8px var(--glow-green);
+  }
+  .star-glyphs{
+    font-size:13px;
+    letter-spacing:1px;
+    color: var(--gold);
+    text-shadow: 0 0 8px rgba(255,209,102,0.5);
+  }
+  .star-glyphs.muted{
+    color:#2a3055;
+    text-shadow:none;
+  }
+  .score-line{
+    font-size:14px;
+    margin-bottom:4px;
+  }
+  .score-line b{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:17px;
+    color: var(--gold);
+  }
+  .score-line.muted-line{
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:0;
+  }
+
+  .hint-text{
+    font-size:12.5px;
+    line-height:1.6;
+    color:var(--muted);
+  }
+  .hint-text b{ color:var(--text); }
+  .legend{
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .legend-row{ display:flex; align-items:center; gap:9px; }
+  .legend-swatch{ width:16px; height:16px; border-radius:4px; flex:none; }
+
+  /* Tutorial overlay */
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(4,6,14,0.72);
+    backdrop-filter: blur(3px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+  .overlay.hidden{ display:none; }
+  .tutorial-card{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:26px 26px 22px;
+    max-width:400px;
+    box-shadow:0 30px 80px rgba(0,0,0,0.6);
+  }
+  .tutorial-card h2{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:20px;
+    margin:0 0 10px;
+  }
+  .tutorial-card p{
+    font-size:13.5px;
+    line-height:1.65;
+    color:var(--muted);
+    margin:0 0 10px;
+  }
+  .tutorial-card .step-dots{
+    display:flex;
+    gap:6px;
+    margin:16px 0 18px;
+  }
+  .step-dots span{
+    width:7px;height:7px;border-radius:50%;
+    background:#2a3055;
+  }
+  .step-dots span.active{ background:var(--blue); }
+  .tutorial-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+  }
+
+  .toast{
+    position:fixed;
+    bottom:26px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:linear-gradient(90deg, #1a2440, #232b56);
+    border:1px solid #3a5bff;
+    color:var(--text);
+    padding:12px 20px;
+    border-radius:11px;
+    font-size:13.5px;
+    box-shadow:0 10px 40px rgba(58,91,255,0.35);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s, transform .25s;
+    z-index:60;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width:720px){
+    .layout{ flex-direction:column; align-items:center; }
+    .side{ width:100%; max-width:420px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="brand">
+    <h1>Prism Path</h1>
+    <span>a light-routing puzzle</span>
+  </div>
+  <div class="tagline">Rotate mirrors to steer each beam of light into its matching target. New here? The first puzzle walks you through it.</div>
+
+  <div class="layout">
+    <div class="board-wrap">
+      <div class="board-header">
+        <div>
+          <div class="level-name" id="levelName">Level</div>
+          <div class="level-sub" id="levelSub">—</div>
+        </div>
+        <button class="icon-btn" id="howToBtn" title="How to play">?</button>
+      </div>
+      <div class="board-outer">
+        <div class="board" id="board"></div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="undoBtn">Undo</button>
+        <button class="btn" id="resetBtn">Reset level</button>
+        <button class="btn primary" id="nextBtn" disabled>Next level</button>
+      </div>
+      <div class="status-row" id="statusRow"></div>
+    </div>
+
+    <div class="side">
+      <div class="panel-card">
+        <h3>SCORE</h3>
+        <div id="scoreSummary"></div>
+      </div>
+      <div class="panel-card">
+        <h3>LEVELS</h3>
+        <div class="level-list" id="levelList"></div>
+      </div>
+      <div class="panel-card">
+        <h3>HOW BEAMS BEHAVE</h3>
+        <div class="hint-text" id="hintText">
+          Click an empty tile to place a mirror. Click a mirror again to rotate it. Route each glowing beam into the ring of the same color.
+        </div>
+      </div>
+      <div class="panel-card">
+        <h3>LEGEND</h3>
+        <div class="legend">
+          <div class="legend-row"><div class="legend-swatch" style="background:radial-gradient(circle,#fff,var(--red))"></div> Source — beam origin</div>
+          <div class="legend-row"><div class="legend-swatch" style="border:2px solid var(--blue); background:transparent;"></div> Target — needs matching color</div>
+          <div class="legend-row"><div class="legend-swatch" style="background:repeating-linear-gradient(135deg,#2a2f45,#2a2f45 3px,#1b2036 3px,#1b2036 6px);"></div> Blocker — stops any beam</div>
+          <div class="legend-row"><div class="legend-swatch" style="background:radial-gradient(circle,#fff,#7d8cff);"></div> Splitter — sends the beam two ways</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="tutorialOverlay">
+    <div class="tutorial-card" id="tutorialCard"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  const COLORS = {
+    red:   { hex: "#ff5c7a", glow: "rgba(255,92,122,0.6)" },
+    green: { hex: "#45f0ac", glow: "rgba(69,240,172,0.6)" },
+    blue:  { hex: "#49c6ff", glow: "rgba(73,198,255,0.6)" },
+    gold:  { hex: "#ffd166", glow: "rgba(255,209,102,0.6)" }
+  };
+
+  const DIRS = {
+    N: {dx:0, dy:-1}, S:{dx:0, dy:1}, E:{dx:1, dy:0}, W:{dx:-1, dy:0}
+  };
+
+  function reflectSlash(dir){ // '/'
+    return {N:"E", E:"N", S:"W", W:"S"}[dir];
+  }
+  function reflectBack(dir){ // '\'
+    return {N:"W", W:"N", S:"E", E:"S"}[dir];
+  }
+
+  // ---------- Level definitions ----------
+  // cell types: 'empty-fixed' (locked, can't touch), 'empty' (placeable),
+  // 'mirror-locked' (pre-placed, fixed), 'blocker', 'splitter'
+  // sources: [{x,y,dir,color}]
+  // targets: [{x,y,color}]
+  const LEVELS = [
+    {
+      id: 0, tutorial: true,
+      name: "Tutorial", sub: "3 × 3 — one mirror does it all",
+      cols: 3, rows: 3, par: 1,
+      sources: [{x:0,y:0,dir:"E",color:"red"}],
+      targets: [{x:1,y:2,color:"red"}],
+      placeable: [{x:1,y:0}],
+      blockers: [], splitters: [],
+      locked: {}
+    },
+    {
+      id: 1,
+      name: "Level 1", sub: "4 × 4 — a single turn",
+      cols: 4, rows: 4, par: 1,
+      sources: [{x:0,y:1,dir:"E",color:"blue"}],
+      targets: [{x:3,y:3,color:"blue"}],
+      placeable: [{x:2,y:1},{x:3,y:1}],
+      blockers: [], splitters: [],
+      locked: {}
+    },
+    {
+      id: 2,
+      name: "Level 2", sub: "4 × 4 — two turns",
+      cols: 4, rows: 4, par: 2,
+      sources: [{x:0,y:0,dir:"E",color:"green"}],
+      targets: [{x:0,y:3,color:"green"}],
+      placeable: [{x:3,y:0},{x:3,y:3}],
+      blockers: [], splitters: [],
+      locked: {}
+    },
+    {
+      id: 3,
+      name: "Level 3", sub: "5 × 4 — two beams, two colors",
+      cols: 5, rows: 4, par: 2,
+      sources: [
+        {x:0,y:0,dir:"E",color:"gold"},
+        {x:4,y:3,dir:"W",color:"blue"}
+      ],
+      targets: [
+        {x:2,y:1,color:"gold"},
+        {x:2,y:2,color:"blue"}
+      ],
+      placeable: [{x:2,y:0},{x:2,y:3}],
+      blockers: [],
+      splitters: [],
+      locked: {}
+    },
+    {
+      id: 4,
+      name: "Level 4", sub: "5 × 5 — mind the blocker",
+      cols: 5, rows: 5, par: 3,
+      sources: [{x:0,y:2,dir:"E",color:"red"}],
+      targets: [{x:4,y:2,color:"red"}],
+      placeable: [{x:1,y:2},{x:1,y:0},{x:4,y:0}],
+      blockers: [{x:2,y:2}],
+      splitters: [],
+      locked: {}
+    },
+    {
+      id: 5,
+      name: "Level 5", sub: "5 × 5 — the splitter",
+      cols: 5, rows: 5, par: 2,
+      sources: [{x:0,y:2,dir:"E",color:"green"}],
+      targets: [{x:4,y:0,color:"green"},{x:4,y:4,color:"green"}],
+      placeable: [{x:2,y:0},{x:2,y:4}],
+      blockers: [],
+      splitters: [{x:2,y:2}],
+      locked: {}
+    },
+    {
+      id: 6,
+      name: "Level 6", sub: "6 × 4 — two beams, no crossing",
+      cols: 6, rows: 4, par: 2,
+      sources: [
+        {x:0,y:0,dir:"E",color:"gold"},
+        {x:5,y:3,dir:"W",color:"blue"}
+      ],
+      targets: [
+        {x:3,y:1,color:"gold"},
+        {x:2,y:2,color:"blue"}
+      ],
+      placeable: [{x:3,y:0},{x:2,y:3},{x:1,y:1}],
+      blockers: [],
+      splitters: [],
+      locked: {}
+    },
+    {
+      id: 7,
+      name: "Level 7", sub: "6 × 5 — split, then dodge the wall",
+      cols: 6, rows: 5, par: 3,
+      sources: [{x:0,y:2,dir:"E",color:"green"}],
+      targets: [{x:5,y:0,color:"green"},{x:4,y:4,color:"green"}],
+      placeable: [{x:2,y:0},{x:2,y:3},{x:4,y:3}],
+      blockers: [{x:2,y:4}],
+      splitters: [{x:2,y:2}],
+      locked: {}
+    },
+    {
+      id: 8,
+      name: "Level 8", sub: "6 × 6 — three colors at once",
+      cols: 6, rows: 6, par: 4,
+      sources: [
+        {x:0,y:0,dir:"E",color:"red"},
+        {x:5,y:2,dir:"W",color:"gold"},
+        {x:0,y:4,dir:"E",color:"blue"}
+      ],
+      targets: [
+        {x:5,y:1,color:"red"},
+        {x:0,y:3,color:"gold"},
+        {x:5,y:5,color:"blue"}
+      ],
+      placeable: [{x:5,y:0},{x:0,y:2},{x:2,y:4},{x:2,y:5}],
+      blockers: [],
+      splitters: [],
+      locked: {}
+    },
+    {
+      id: 9,
+      name: "Level 9", sub: "7 × 6 — the grand finale",
+      cols: 7, rows: 6, par: 4,
+      sources: [
+        {x:0,y:0,dir:"E",color:"red"},
+        {x:0,y:3,dir:"E",color:"green"}
+      ],
+      targets: [
+        {x:6,y:2,color:"red"},
+        {x:6,y:0,color:"green"},
+        {x:6,y:5,color:"green"}
+      ],
+      placeable: [{x:1,y:0},{x:1,y:2},{x:3,y:0},{x:3,y:5},{x:5,y:3}],
+      blockers: [{x:2,y:0}],
+      splitters: [{x:3,y:3}],
+      locked: {}
+    }
+  ];
+
+  // ---------- State ----------
+  let currentLevelIndex = 0;
+  let boardState = {}; // key "x,y" -> "/" | "\\" | null
+  let history = [];
+  let solvedLevels = JSON.parse(sessionStorage.getItem('prismPathSolved') || "[]");
+  let bestStars = JSON.parse(sessionStorage.getItem('prismPathStars') || "{}"); // {levelId: 1|2|3}
+  const CELL_SIZE = 78;
+
+  const boardEl = document.getElementById('board');
+  const levelListEl = document.getElementById('levelList');
+  const scoreSummaryEl = document.getElementById('scoreSummary');
+  const levelNameEl = document.getElementById('levelName');
+  const levelSubEl = document.getElementById('levelSub');
+  const statusRowEl = document.getElementById('statusRow');
+  const nextBtn = document.getElementById('nextBtn');
+  const undoBtn = document.getElementById('undoBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const howToBtn = document.getElementById('howToBtn');
+  const toastEl = document.getElementById('toast');
+  const overlayEl = document.getElementById('tutorialOverlay');
+  const tutorialCardEl = document.getElementById('tutorialCard');
+
+  function key(x,y){ return x+","+y; }
+
+  function starsFor(level, mirrorsUsed){
+    if(mirrorsUsed <= level.par) return 3;
+    if(mirrorsUsed === level.par + 1) return 2;
+    return 1;
+  }
+  function starGlyphs(count){
+    let s = "";
+    for(let i=0;i<3;i++) s += i < count ? "★" : "☆";
+    return `<span class="star-glyphs">${s}</span>`;
+  }
+
+  function cellRole(level, x, y){
+    for(const s of level.sources) if(s.x===x && s.y===y) return {type:"source", data:s};
+    for(const t of level.targets) if(t.x===x && t.y===y) return {type:"target", data:t};
+    for(const b of level.blockers) if(b.x===x && b.y===y) return {type:"blocker"};
+    for(const sp of level.splitters) if(sp.x===x && sp.y===y) return {type:"splitter"};
+    for(const p of level.placeable) if(p.x===x && p.y===y) return {type:"placeable"};
+    return {type:"empty-fixed"};
+  }
+
+  function buildBoard(level){
+    boardEl.innerHTML = "";
+    boardEl.style.gridTemplateColumns = `repeat(${level.cols}, ${CELL_SIZE}px)`;
+    boardEl.style.gridTemplateRows = `repeat(${level.rows}, ${CELL_SIZE}px)`;
+    boardEl.style.width = (level.cols*CELL_SIZE) + "px";
+    boardEl.style.height = (level.rows*CELL_SIZE) + "px";
+
+    for(let y=0; y<level.rows; y++){
+      for(let x=0; x<level.cols; x++){
+        const role = cellRole(level, x, y);
+        const cell = document.createElement('div');
+        cell.className = "cell";
+        cell.style.width = CELL_SIZE+"px";
+        cell.style.height = CELL_SIZE+"px";
+        cell.dataset.x = x; cell.dataset.y = y;
+
+        if(role.type === "source"){
+          const c = COLORS[role.data.color];
+          const mark = document.createElement('div');
+          mark.className = "source-mark";
+          mark.style.setProperty('--c1', c.hex);
+          mark.style.setProperty('--glow', c.glow);
+          cell.appendChild(mark);
+        } else if(role.type === "target"){
+          const c = COLORS[role.data.color];
+          const mark = document.createElement('div');
+          mark.className = "target-mark";
+          mark.dataset.color = role.data.color;
+          mark.style.setProperty('--c1', c.hex);
+          mark.style.setProperty('--glow', c.glow);
+          cell.appendChild(mark);
+        } else if(role.type === "blocker"){
+          const b = document.createElement('div');
+          b.className = "blocker";
+          cell.appendChild(b);
+        } else if(role.type === "splitter"){
+          const sp = document.createElement('div');
+          sp.className = "splitter";
+          cell.appendChild(sp);
+        } else if(role.type === "placeable"){
+          cell.classList.add("placeable");
+          cell.addEventListener('click', () => onCellClick(x,y));
+          const mirrorHolder = document.createElement('div');
+          mirrorHolder.className = "mirror-holder";
+          mirrorHolder.style.width = "100%";
+          mirrorHolder.style.height = "100%";
+          mirrorHolder.style.display = "flex";
+          mirrorHolder.style.alignItems = "center";
+          mirrorHolder.style.justifyContent = "center";
+          cell.appendChild(mirrorHolder);
+        }
+        boardEl.appendChild(cell);
+      }
+    }
+    renderMirrors(level);
+  }
+
+  function renderMirrors(level){
+    for(const p of level.placeable){
+      const cell = boardEl.querySelector(`.cell[data-x="${p.x}"][data-y="${p.y}"]`);
+      if(!cell) continue;
+      const holder = cell.querySelector('.mirror-holder');
+      holder.innerHTML = "";
+      const m = boardState[key(p.x,p.y)];
+      if(m){
+        const wrap = document.createElement('div');
+        wrap.className = "mirror";
+        wrap.innerHTML = mirrorSVG(m);
+        holder.appendChild(wrap);
+      }
+    }
+  }
+
+  function mirrorSVG(type){
+    if(type === "/"){
+      return `<svg viewBox="0 0 100 100"><line x1="18" y1="82" x2="82" y2="18" stroke="#cfd6ff" stroke-width="7" stroke-linecap="round"/></svg>`;
+    } else {
+      return `<svg viewBox="0 0 100 100"><line x1="18" y1="18" x2="82" y2="82" stroke="#cfd6ff" stroke-width="7" stroke-linecap="round"/></svg>`;
+    }
+  }
+
+  function onCellClick(x,y){
+    history.push(JSON.parse(JSON.stringify(boardState)));
+    const k = key(x,y);
+    const cur = boardState[k];
+    if(!cur) boardState[k] = "/";
+    else if(cur === "/") boardState[k] = "\\";
+    else boardState[k] = null;
+    renderMirrors(LEVELS[currentLevelIndex]);
+    simulateAndRender();
+  }
+
+  // ---------- Beam simulation ----------
+  function simulate(level){
+    const paths = []; // each: {color, points:[{x,y}...]}
+    const hitTargets = new Set();
+    const inBounds = (x,y) => x>=0 && y>=0 && x<level.cols && y<level.rows;
+
+    function traceFrom(startX, startY, dir, color, depth){
+      if(depth > 60) return;
+      let x = startX, y = startY, d = dir;
+      const points = [{x,y}];
+      while(true){
+        const dv = DIRS[d];
+        x += dv.dx; y += dv.dy;
+        if(!inBounds(x,y)){ points.push({x,y}); break; }
+        points.push({x,y});
+        const role = cellRole(level, x, y);
+        if(role.type === "blocker"){ break; }
+        if(role.type === "target"){
+          if(role.data.color === color) hitTargets.add(key(x,y));
+          break;
+        }
+        if(role.type === "splitter"){
+          // split perpendicular to travel
+          const perpA = (d==="E"||d==="W") ? "N" : "E";
+          const perpB = (d==="E"||d==="W") ? "S" : "W";
+          paths.push({color, points});
+          traceFrom(x,y,perpA,color, depth+1);
+          traceFrom(x,y,perpB,color, depth+1);
+          return;
+        }
+        if(role.type === "placeable"){
+          const m = boardState[key(x,y)];
+          if(m === "/") d = reflectSlash(d);
+          else if(m === "\\") d = reflectBack(d);
+          // else pass straight through
+        }
+        // source or empty-fixed: pass straight through
+      }
+      paths.push({color, points});
+    }
+
+    for(const s of level.sources){
+      traceFrom(s.x, s.y, s.dir, s.color, 0);
+    }
+    return {paths, hitTargets};
+  }
+
+  function pointToPixel(p){
+    return { px: p.x*CELL_SIZE + CELL_SIZE/2, py: p.y*CELL_SIZE + CELL_SIZE/2 };
+  }
+
+  function simulateAndRender(){
+    const level = LEVELS[currentLevelIndex];
+    const {paths, hitTargets} = simulate(level);
+
+    // draw beams
+    let svg = boardEl.querySelector('svg.beams');
+    if(svg) svg.remove();
+    const ns = "http://www.w3.org/2000/svg";
+    svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("class","beams");
+    svg.setAttribute("width", level.cols*CELL_SIZE);
+    svg.setAttribute("height", level.rows*CELL_SIZE);
+    svg.setAttribute("viewBox", `0 0 ${level.cols*CELL_SIZE} ${level.rows*CELL_SIZE}`);
+
+    for(const path of paths){
+      const c = COLORS[path.color];
+      const pts = path.points.map(pointToPixel);
+      const d = pts.map((p,i) => (i===0?"M":"L") + p.px + "," + p.py).join(" ");
+
+      const glow = document.createElementNS(ns,"path");
+      glow.setAttribute("d", d);
+      glow.setAttribute("class","beam-line");
+      glow.setAttribute("stroke", c.hex);
+      glow.setAttribute("stroke-width", "10");
+      glow.setAttribute("opacity", "0.25");
+      svg.appendChild(glow);
+
+      const core = document.createElementNS(ns,"path");
+      core.setAttribute("d", d);
+      core.setAttribute("class","beam-line");
+      core.setAttribute("stroke", c.hex);
+      core.setAttribute("stroke-width", "3");
+      svg.appendChild(core);
+    }
+    boardEl.appendChild(svg);
+
+    // mark targets
+    for(const t of level.targets){
+      const cell = boardEl.querySelector(`.cell[data-x="${t.x}"][data-y="${t.y}"] .target-mark`);
+      if(!cell) continue;
+      if(hitTargets.has(key(t.x,t.y))) cell.classList.add('hit');
+      else cell.classList.remove('hit');
+    }
+
+    const solved = level.targets.every(t => hitTargets.has(key(t.x,t.y)));
+    const mirrorsUsed = level.placeable.reduce((n,p) => n + (boardState[key(p.x,p.y)] ? 1 : 0), 0);
+
+    if(solved){
+      const stars = starsFor(level, mirrorsUsed);
+      const prevBest = bestStars[level.id] || 0;
+      if(stars > prevBest){
+        bestStars[level.id] = stars;
+        sessionStorage.setItem('prismPathStars', JSON.stringify(bestStars));
+      }
+      statusRowEl.innerHTML = `<b style="color:#45f0ac">Solved</b> — ${starGlyphs(stars)} with ${mirrorsUsed} mirror${mirrorsUsed===1?"":"s"} (par ${level.par})`;
+    } else {
+      statusRowEl.innerHTML = `<b>${hitTargets.size} / ${level.targets.length}</b> targets lit`;
+    }
+    nextBtn.disabled = !solved || currentLevelIndex === LEVELS.length - 1;
+
+    if(solved && !solvedLevels.includes(level.id)){
+      solvedLevels.push(level.id);
+      sessionStorage.setItem('prismPathSolved', JSON.stringify(solvedLevels));
+      renderLevelList();
+      renderScoreSummary();
+      showToast(level.tutorial ? "Nice — that's the whole idea. Try Level 1 next." : "Solved! On to the next one.");
+      if(level.tutorial) advanceTutorial();
+    } else if(solved){
+      renderLevelList();
+      renderScoreSummary();
+    }
+  }
+
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toastEl.classList.remove('show'), 2600);
+  }
+
+  // ---------- Level list ----------
+  function renderLevelList(){
+    levelListEl.innerHTML = "";
+    LEVELS.forEach((lvl, i) => {
+      const item = document.createElement('div');
+      const solved = solvedLevels.includes(lvl.id);
+      item.className = "level-item" + (i===currentLevelIndex ? " active" : "") + (solved ? " solved" : "");
+      const starsHtml = solved
+        ? starGlyphs(bestStars[lvl.id] || 1)
+        : `<span class="star-glyphs muted">☆☆☆</span>`;
+      item.innerHTML = `<span>${lvl.name}</span>${starsHtml}`;
+      item.addEventListener('click', () => loadLevel(i));
+      levelListEl.appendChild(item);
+    });
+  }
+
+  function renderScoreSummary(){
+    const totalPossible = LEVELS.length * 3;
+    const earned = LEVELS.reduce((sum, lvl) => sum + (bestStars[lvl.id] || 0), 0);
+    const solvedCount = solvedLevels.length;
+    scoreSummaryEl.innerHTML = `
+      <div class="score-line"><b>${earned}</b> / ${totalPossible} stars</div>
+      <div class="score-line muted-line">${solvedCount} / ${LEVELS.length} levels solved</div>
+    `;
+  }
+
+  function loadLevel(i){
+    currentLevelIndex = i;
+    boardState = {};
+    history = [];
+    const level = LEVELS[i];
+    levelNameEl.textContent = level.name;
+    levelSubEl.textContent = level.sub;
+    buildBoard(level);
+    simulateAndRender();
+    renderLevelList();
+    renderScoreSummary();
+    if(level.tutorial && solvedLevels.indexOf(level.id) === -1 && !sessionStorage.getItem('prismPathTutorialSeen')){
+      openTutorial();
+    }
+  }
+
+  undoBtn.addEventListener('click', () => {
+    if(history.length === 0) return;
+    boardState = history.pop();
+    renderMirrors(LEVELS[currentLevelIndex]);
+    simulateAndRender();
+  });
+  resetBtn.addEventListener('click', () => {
+    boardState = {};
+    history = [];
+    renderMirrors(LEVELS[currentLevelIndex]);
+    simulateAndRender();
+  });
+  nextBtn.addEventListener('click', () => {
+    if(currentLevelIndex < LEVELS.length - 1) loadLevel(currentLevelIndex + 1);
+  });
+
+  // ---------- Tutorial overlay ----------
+  const TUTORIAL_STEPS = [
+    {
+      title: "Welcome to Prism Path",
+      body: "Somewhere on the board a beam of light is waiting to leave its source. Your job is to guide it into the matching ring — that's a target."
+    },
+    {
+      title: "Placing a mirror",
+      body: "See the tile with a soft pulse? Click it once to drop a mirror. Click it again to rotate the mirror to its other angle. Click a third time to remove it."
+    },
+    {
+      title: "Reading the beam",
+      body: "As soon as a mirror is in place, the light updates instantly — no confirm button. Watch the glowing line bend and follow it toward the ring."
+    },
+    {
+      title: "You're set",
+      body: "If you get stuck, hit Reset to clear your mirrors, or Undo to step back one move. Try the tile now — one mirror is all this puzzle needs."
+    }
+  ];
+  let tutorialStep = 0;
+
+  function renderTutorialStep(){
+    const s = TUTORIAL_STEPS[tutorialStep];
+    const isLast = tutorialStep === TUTORIAL_STEPS.length - 1;
+    tutorialCardEl.innerHTML = `
+      <h2>${s.title}</h2>
+      <p>${s.body}</p>
+      <div class="step-dots">
+        ${TUTORIAL_STEPS.map((_,i) => `<span class="${i===tutorialStep?'active':''}"></span>`).join('')}
+      </div>
+      <div class="tutorial-actions">
+        ${tutorialStep>0 ? `<button class="btn" id="tutBack">Back</button>` : ""}
+        <button class="btn primary" id="tutNext">${isLast ? "Let's play" : "Next"}</button>
+      </div>
+    `;
+    document.getElementById('tutNext').addEventListener('click', () => {
+      if(isLast){ closeTutorial(); }
+      else { tutorialStep++; renderTutorialStep(); }
+    });
+    const back = document.getElementById('tutBack');
+    if(back) back.addEventListener('click', () => { tutorialStep--; renderTutorialStep(); });
+  }
+
+  function openTutorial(){
+    tutorialStep = 0;
+    renderTutorialStep();
+    overlayEl.classList.remove('hidden');
+  }
+  function closeTutorial(){
+    overlayEl.classList.add('hidden');
+    sessionStorage.setItem('prismPathTutorialSeen', "1");
+    highlightPlaceable();
+  }
+  function advanceTutorial(){
+    // called after solving the tutorial level itself — nothing extra needed,
+    // the toast already points them to Level 1.
+  }
+  function highlightPlaceable(){
+    const level = LEVELS[currentLevelIndex];
+    if(!level.tutorial) return;
+    level.placeable.forEach(p => {
+      const cell = boardEl.querySelector(`.cell[data-x="${p.x}"][data-y="${p.y}"]`);
+      if(cell) cell.classList.add('glow-hint');
+    });
+  }
+
+  howToBtn.addEventListener('click', () => { openTutorial(); });
+
+  // ---------- Init ----------
+  renderLevelList();
+  loadLevel(0);
+
+})();
+</script>
+</body>
+</html>
